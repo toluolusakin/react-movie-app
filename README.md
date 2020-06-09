@@ -1,4 +1,4 @@
-An IMDB style real world Web Application in React js created while learning React. The application focus on class based components as against the use of hook api.
+An IMDB style real world Web Application in React js created while learning React. The application focus on class based components and the use of hook api.
 
 ## Available Scripts
 
