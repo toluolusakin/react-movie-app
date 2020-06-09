@@ -3,9 +3,7 @@ import FontAwesome from 'react-fontawesome';
 import './SearchBar.css';
 
 class SearchBar extends Component{
-    state = {
-        value: ''
-    }
+    state = {value: ''}
 
     timeout = null;
 
@@ -19,7 +17,8 @@ class SearchBar extends Component{
     }
 
     render(){
-        return (
+        const {value} = this.state;
+        return(
             <div className="rmdb-searchbar">
                 <div className="rmdb-searchbar-content">
                     <FontAwesome className="rmdb-fa-search" name="search" size="2x" />
@@ -28,12 +27,13 @@ class SearchBar extends Component{
                         className="rmdb-searchbar-input"
                         placeholder="Search"
                         onChange={this.doSearch}
-                        value={this.state.value}
+                        value={value}
                     />
                 </div>
             </div>
         )
-    }
+    } 
+    
 }
 
 export default SearchBar;

@@ -2,8 +2,7 @@ import React from 'react';
 import {Link} from 'react-router-dom';
 import './Header.css';
 
-const Header = () => {
-    return(
+const Header = () => (
         <div className="rmdb-header">
             <div className="rmdb-header-content">
                 <Link to="/">
@@ -13,6 +12,6 @@ const Header = () => {
             </div>
         </div>
     )
-}
+
 
 export default Header;

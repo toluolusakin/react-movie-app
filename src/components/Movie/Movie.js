@@ -59,28 +59,30 @@ class Movie extends Component{
     }
 
     render(){
+        const {movie, actors, directors, loading} = this.state;
+        const {location} = this.props;
         return(
             <div className="rmdb-movie">
-                {this.state.movie ?
+                {movie ?
                     <div>
-                        <Navigation movie={this.props.location.movieName} />
-                        <MovieInfo movie={this.state.movie} directors={this.state.directors} />
-                        <MovieInfoBar time={this.state.movie.runtime} 
-                        budget={this.state.movie.budget} revenue={this.state.movie.revenue} />
+                        <Navigation movie={location.movieName} />
+                        <MovieInfo movie={movie} directors={directors} />
+                        <MovieInfoBar time={movie.runtime} 
+                        budget={movie.budget} revenue={movie.revenue} />
                     </div>
                 : null }
-                {this.state.actors ?
+                {actors ?
                     <div className="rmdb-movie-grid">
                         <FourColGrid
                             header={'Actors'}>
-                            {this.state.actors.map((element, i) => {
+                            {actors.map((element, i) => {
                                 return <Actor key={i} actor={element} />
                             })}
                         </FourColGrid>
                     </div>
                     : null }
-                {!this.state.actors && !this.state.loading ? <h1>No Movie Found!</h1> : null}
-                {this.state.loading ? <Spinner /> : null}
+                {!actors && !loading ? <h1>No Movie Found!</h1> : null}
+                {loading ? <Spinner /> : null}
             </div>
         )
     }
