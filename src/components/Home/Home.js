@@ -61,23 +61,25 @@ class Home extends Component{
         this.fetchItems(endpoint);
     }
 
-    fetchItems = (endpoint) => {
+    fetchItems = async endpoint => {
+        //ES6 destructing the state
         const { movies, searchTerm, heroImage} = this.state;
-        fetch(endpoint)
-        .then(result => result.json())
-        .then(result => {
-            this.setState({
-                movies: [...movies, ...result.results],
-                heroImage: heroImage || result.results[0],
-                loading: false,
-                currentPage: result.page,
-                totalPages: result.total_pages
-            }, () => {
-                if(searchTerm == ''){
-                    localStorage.setItem('HomeState', JSON.stringify(this.state));
-                }
-            });
-        })
+        const result = await (await fetch(endpoint)).json();
+        try{
+        this.setState({
+            movies: [...movies, ...result.results],
+            heroImage: heroImage || result.results[0],
+            loading: false,
+            currentPage: result.page,
+            totalPages: result.total_pages
+        }, () => {
+            if(searchTerm == ''){
+                localStorage.setItem('HomeState', JSON.stringify(this.state));
+            }
+        });
+        }catch(e){
+            console.log("There was an error: ", e);
+        }
     }
 
     render(){
