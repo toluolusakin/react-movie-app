@@ -24,41 +24,40 @@ class Home extends Component{
             this.setState({...state});
         }else{
             this.setState({loading: true });
-            const endpoint = `${API_URL}movie/popular?api_key=${API_KEY}&language=en-US&page=1`;
-            this.fetchItems(endpoint);
+            this.fetchItems(this.createEndpoint("movie/popular",false, ""));
         }
-       
     }
 
-    searchItems = (searchTerm) => {
-        console.log(searchTerm);
-        let endpoint = '';
+    /*
+    Using Curried Function method
+    curriedEndpoint = type => loadMore => searchTerm => 
+        `${API_URL}${type}?api_key=${API_KEY}&language=en-US&page=${loadMore 
+            && this.state.currentPage + 1}&query=${searchTerm}`;
+    
+    searchEP = this.curriedEndpoint("search/movie");
+    popularEP = this.curriedEndpoint("movie/popular");
+
+    this.popularEP(loadMore)("")
+    this.searchEP(loadMore)(this.state.searchTerm)
+    */
+
+    createEndpoint = (type, loadMore, searchTerm) => {
+        return `${API_URL}${type}?api_key=${API_KEY}&language=en-US&page=${loadMore 
+            && this.state.currentPage + 1}&query=${searchTerm}`;
+    }
+
+    updateItems = (loadMore, searchTerm) => {
         this.setState({
-            movies: [],
+            movies: loadMore ? [...this.state.movies] : [],
             loading: true,
-            searchTerm: searchTerm
-        });
-
-        if(searchTerm === ''){
-            endpoint = `${API_URL}movie/popular?api_key=${API_KEY}&language=en-US&page=1`;
-        }else{
-            endpoint = endpoint = `${API_URL}search/movie/?api_key=${API_KEY}&language=en-US&query=${searchTerm}`;
-        }
-        this.fetchItems(endpoint);
-    }
-
-    loadMoreItem = () => {
-        const{searchTerm, currentPage} = this.state;
-        let endpoint = '';
-        this.setState({
-            loading: true
-        });
-        if(searchTerm ===''){
-            endpoint = `${API_URL}movie/popular?api_key=${API_KEY}&language=en-US&page=${currentPage + 1}`;
-        }else{
-            endpoint = `${API_URL}search/movie/?api_key=${API_KEY}&language=en-US&query=${searchTerm}&page=${currentPage + 1}`;
-        }
-        this.fetchItems(endpoint);
+            searchTerm: loadMore ? this.state.searchTerm : searchTerm
+        }, () => {
+            this.fetchItems(
+                !this.state.searchTerm ?
+                this.createEndpoint("movie/popular", loadMore, "") :
+                this.createEndpoint("search/movie", loadMore, this.state.searchTerm)
+            )
+        })
     }
 
     fetchItems = async endpoint => {
@@ -88,15 +87,16 @@ class Home extends Component{
         
         return(
             <div className="rmdb-home">
-                {heroImage ?
+                {heroImage && !searchTerm?
                     <div>
                         <HeroImage
                             image={`${IMAGE_BASE_URL}${BACKDROP_SIZE}${heroImage.backdrop_path}`}
                             title={heroImage.original_title}
                             text={heroImage.overview}
                         />
-                        <SearchBar callback={this.searchItems} />
+                       
                     </div> : null }
+                <SearchBar callback={this.updateItems} />
                 <div className="rmdb-home-grid">
                     <FourColGrid
                         header={searchTerm ? 'Search Result' : 'Popular Movies'}
@@ -114,8 +114,8 @@ class Home extends Component{
 
                     </FourColGrid>
                     {loading ? <Spinner/> : null }
-                    {(currentPage <= totalPages && !loading) ?
-                        <LoadMoreBtn text="Load More" onClick={this.loadMoreItem} /> : null }
+                    {(currentPage < totalPages && !loading) ?
+                        <LoadMoreBtn text="Load More" onClick={this.updateItems} /> : null }
                 </div>
             </div>
         )
