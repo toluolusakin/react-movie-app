@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import {API_URL, API_KEY, IMAGE_BASE_URL, POSTER_SIZE, BACKDROP_SIZE} from "../../config";
+import React from 'react';
+import {IMAGE_BASE_URL, POSTER_SIZE, BACKDROP_SIZE} from "../../config";
 import HeroImage from '../elements/HeroImage/HeroImage';
 import SearchBar from '../elements/SearchBar/SearchBar';
 import FourColGrid from '../elements/FourColGrid/FourColGrid';
@@ -8,118 +8,58 @@ import LoadMoreBtn from '../elements/LoadMoreBtn/LoadMoreBtn';
 import Spinner from '../elements/Spinner/Spinner';
 import './Home.css';
 
-class Home extends Component{
-    state = {
-        movies: [],
-        heroImage: null,
-        loading: false,
-        currentPage: 0,
-        totalPages: 0,
-        searchTerm: ''
+import { useFetchMovies } from './customHook';
+
+const Home = () => {
+   
+    const[{ state, isLoading }, fetchMovies, createEndpoint, updateState] = useFetchMovies();
+
+    const updateItems = (loadMore, searchTerm) => {
+        updateState(loadMore, searchTerm);
+        var thisSearch = !state.searchTerm ? searchTerm : state.searchTerm;
+        fetchMovies(
+            !thisSearch ?
+            createEndpoint("movie/popular", loadMore, "") :
+            createEndpoint("search/movie", loadMore, thisSearch)
+        )
     }
 
-    componentDidMount(){
-        if(localStorage.getItem('HomeState')){
-            const state = JSON.parse(localStorage.getItem('HomeState'));
-            this.setState({...state});
-        }else{
-            this.setState({loading: true });
-            this.fetchItems(this.createEndpoint("movie/popular",false, ""));
-        }
-    }
-
-    /*
-    Using Curried Function method
-    curriedEndpoint = type => loadMore => searchTerm => 
-        `${API_URL}${type}?api_key=${API_KEY}&language=en-US&page=${loadMore 
-            && this.state.currentPage + 1}&query=${searchTerm}`;
-    
-    searchEP = this.curriedEndpoint("search/movie");
-    popularEP = this.curriedEndpoint("movie/popular");
-
-    this.popularEP(loadMore)("")
-    this.searchEP(loadMore)(this.state.searchTerm)
-    */
-
-    createEndpoint = (type, loadMore, searchTerm) => {
-        return `${API_URL}${type}?api_key=${API_KEY}&language=en-US&page=${loadMore 
-            && this.state.currentPage + 1}&query=${searchTerm}`;
-    }
-
-    updateItems = (loadMore, searchTerm) => {
-        this.setState({
-            movies: loadMore ? [...this.state.movies] : [],
-            loading: true,
-            searchTerm: loadMore ? this.state.searchTerm : searchTerm
-        }, () => {
-            this.fetchItems(
-                !this.state.searchTerm ?
-                this.createEndpoint("movie/popular", loadMore, "") :
-                this.createEndpoint("search/movie", loadMore, this.state.searchTerm)
-            )
-        })
-    }
-
-    fetchItems = async endpoint => {
-        //ES6 destructing the state
-        const { movies, searchTerm, heroImage} = this.state;
-        const result = await (await fetch(endpoint)).json();
-        try{
-        this.setState({
-            movies: [...movies, ...result.results],
-            heroImage: heroImage || result.results[0],
-            loading: false,
-            currentPage: result.page,
-            totalPages: result.total_pages
-        }, () => {
-            if(searchTerm == ''){
-                localStorage.setItem('HomeState', JSON.stringify(this.state));
-            }
-        });
-        }catch(e){
-            console.log("There was an error: ", e);
-        }
-    }
-
-    render(){
-        //ES6 destructing the state
-        const {movies, heroImage, loading, currentPage, totalPages, searchTerm } = this.state;
-        
-        return(
+    return (
             <div className="rmdb-home">
-                {heroImage && !searchTerm?
+                {state.heroImage && !state.searchTerm ?
                     <div>
                         <HeroImage
-                            image={`${IMAGE_BASE_URL}${BACKDROP_SIZE}${heroImage.backdrop_path}`}
-                            title={heroImage.original_title}
-                            text={heroImage.overview}
+                            image={`${IMAGE_BASE_URL}${BACKDROP_SIZE}${state.heroImage.backdrop_path}`}
+                            title={state.heroImage.original_title}
+                            text={state.heroImage.overview}
                         />
                        
                     </div> : null }
-                <SearchBar callback={this.updateItems} />
+                <SearchBar callback={updateItems} />
                 <div className="rmdb-home-grid">
                     <FourColGrid
-                        header={searchTerm ? 'Search Result' : 'Popular Movies'}
-                        loading={loading}
+                        header={state.searchTerm ? 'Search Result' : 'Popular Movies'}
+                        loading={isLoading}
                         >
-                        {movies.map((element, i) => {
+                        {state.movies.map((element, i) => {
                             return <MovieThumb
                                     key={i}
                                     clickable={true}
-                                    image={element.poster_path ? `${IMAGE_BASE_URL}${POSTER_SIZE}/${element.poster_path}` : './images/no_image.jpg'}
+                                    image={element.poster_path ? 
+                                        `${IMAGE_BASE_URL}${POSTER_SIZE}/${element.poster_path}` : 
+                                        './images/no_image.jpg'}
                                     movieId={element.id}
                                     movieName={element.original_title}
                             />
                         })}
 
                     </FourColGrid>
-                    {loading ? <Spinner/> : null }
-                    {(currentPage < totalPages && !loading) ?
-                        <LoadMoreBtn text="Load More" onClick={this.updateItems} /> : null }
+                    {isLoading ? <Spinner/> : null }
+                    {(state.currentPage < state.totalPages && !isLoading) ?
+                        <LoadMoreBtn text="Load More" onClick={updateItems} /> : null }
                 </div>
             </div>
-        )
-    }
+        );
 }
 
 export default Home;
